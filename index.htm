@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOEM - Jogo de Enigmas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000; /* Preto dark */
+            color: #ff0000; /* Vermelho sangue */
+            text-align: center;
+        }
+        h1 {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+        #imagem {
+            max-width: 50%; /* Reduz a largura da imagem inicial */
+            height: auto; /* Mantém a proporção da imagem */
+            margin: 20px auto;
+        }
+        #enigmas {
+            margin: 20px auto;
+            padding: 20px;
+            border: 2px solid #ff0000;
+            width: 80%;
+            border-radius: 10px;
+            background-color: rgba(255, 0, 0, 0.1); /* Vermelho claro para o fundo */
+        }
+        #imagem-enigma {
+            max-width: 40%; /* Tamanho da imagem do enigma menor */
+            height: auto; /* Mantém a proporção da imagem */
+            margin: 10px auto; /* Centraliza a imagem */
+            display: block; /* Exibe como bloco para centralizar */
+        }
+        input[type="text"] {
+            width: 80%; /* Aumenta a largura da caixa de resposta */
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #ff0000;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 18px;
+            background-color: #ff0000; /* Vermelho sangue */
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #cc0000; /* Vermelho mais escuro */
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>JOEM - Jogo de Enigmas</h1>
+    <img id="imagem" src="crime-scene.jpg" alt="Cena do Crime">
+    <div id="enigmas">
+        <h2>Resolva o Enigma!</h2>
+        <p id="descricao-enigma"></p>
+        <img id="imagem-enigma" src="" alt="Imagem do Enigma" style="display: none;">
+        <p id="pergunta-enigma"></p>
+        <input type="text" id="resposta" placeholder="Digite sua resposta aqui">
+        <button onclick="verificarResposta()">Enviar Resposta</button>
+        <button onclick="pularEnigma()">Pular Enigma</button>
+        <p id="resultado"></p>
+        <button onclick="pedirDica()">Pedir Dica</button>
+        <p id="creditos">Créditos para Dicas: <span id="creditos-pontos">10</span></p>
+        <button onclick="recomeçar()">Recomeçar Jogo</button>
+        <p id="nivel">Nível: <span id="nivel-atual">1</span></p>
+    </div>
+    <footer>
+        Desenvolvido por Ana Emilly
+    </footer>
+
+    <script>
+        // Definindo enigmas com imagens
+        const enigmas = [
+            {
+                descricao: "O desaparecimento de Yasmin da Silva Nery: Estava indo para um show com um amigo.",
+                pergunta: "Quem matou Yasmin?",
+                resposta: "o amigo",
+                dica: "O assassino disse que a casa dele iria ser mais reservado.",
+                imagem: "https://s2.glbimg.com/9IuagOnbtVA2JiEvsJo-1-N6tbE=/0x0:1053x696/640x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2019/g/v/jNKCuwQeufFCyjxjEYyQ/yasmin.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Um crime ocorreu na cidade: um valioso colar foi roubado de uma joalheria.",
+                pergunta: "Quem você suspeita que possa ter cometido o roubo?",
+                resposta: "o caixa",
+                dica: "O caixa estava agindo de forma estranha na noite do roubo.",
+                imagem: "https://blog.usealtar.com.br/wp-content/uploads/2022/04/melhores-joalherias-sao-paulo.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "A polícia encontrou um diário escondido no quarto da vítima, com anotações sobre pessoas estranhas.",
+                pergunta: "O que isso pode indicar sobre o crime?",
+                resposta: "ameaças",
+                dica: "O diário pode conter informações sobre conflitos anteriores.",
+                imagem: "https://images.unsplash.com/photo-1681830588322-ecd71f01f0b3?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Um homem foi visto saindo apressadamente da cena do crime logo após o disparo.",
+                pergunta: "O que isso pode significar?",
+                resposta: "culpado",
+                dica: "Alguém que foge de uma cena pode estar tentando esconder algo.",
+                imagem: "https://psico.online/wp-content/uploads/2016/11/segredos-vidas-secretas.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Uma testemunha afirma que ouviu barulhos de uma briga na noite do crime.",
+                pergunta: "O que você deduz sobre a situação?",
+                resposta: "conflito",
+                dica: "Brigas frequentemente levam a crimes sérios.",
+                imagem: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjT4EbA-zs82gnIxj9GMRRKYosXLJ8A6TnHQ&s" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Um objeto cortante foi encontrado perto do corpo da vítima.",
+                pergunta: "Qual é a sua teoria sobre isso?",
+                resposta: "arma do crime",
+                dica: "Objetos próximos à cena do crime podem ser provas essenciais.",
+                imagem: "https://static.vecteezy.com/ti/vetor-gratis/p1/21056277-sangrento-faca-mao-aguarde-faca-com-sangue-crime-caso-plano-projeto-ilustracao-vetor.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Um carro suspeito foi filmado em uma câmera de segurança na noite do crime.",
+                pergunta: "O que você acha que isso pode indicar?",
+                resposta: "suspeito",
+                dica: "Carros podem ajudar a identificar possíveis criminosos.",
+                imagem: "https://jpimg.com.br/uploads/2018/03/Carro-Marielle-Lapa.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Uma mensagem ameaçadora foi deixada na mesa da vítima.",
+                pergunta: "Qual é a sua interpretação da mensagem?",
+                resposta: "intimidação",
+                dica: "Mensagens ameaçadoras geralmente têm o intuito de amedrontar.",
+                imagem: "mensagem.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Os vizinhos relataram que viram uma pessoa estranha frequentando a casa da vítima nos últimos dias.",
+                pergunta: "Como isso se relaciona ao crime?",
+                resposta: "suspeito",
+                dica: "Frequentadores estranhos podem ter intenções ruins.",
+                imagem: "estranho.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "Um relógio caro foi encontrado no esconderijo de um dos suspeitos.",
+                pergunta: "O que isso implica sobre ele?",
+                resposta: "roubo",
+                dica: "Relógios caros são frequentemente alvos de roubo.",
+                imagem: "relogio.jpg" // Substitua pelo nome correto da imagem
+            },
+            {
+                descricao: "O caso de Junko Furuta envolve um crime brutal que chocou o Japão.",
+                pergunta: "Quem eram os principais responsáveis pelo assassinato?",
+                resposta: "jovens delinquentes",
+                dica: "Estude o perfil dos envolvidos para entender a motivação.",
+                imagem: "https://upload.wikimedia.org/wikipedia/en/1/19/Junko_Furuta.jpg" // Substitua pelo nome correto da imagem
+            }
+        ];
+
+        let nivelAtual = 0;
+        let creditos = 10;
+
+        function carregarEnigma() {
+            const enigma = enigmas[nivelAtual];
+            document.getElementById("descricao-enigma").innerText = enigma.descricao;
+            document.getElementById("pergunta-enigma").innerText = enigma.pergunta;
+            document.getElementById("resultado").innerText = "";
+            document.getElementById("resposta").value = "";
+            document.getElementById("nivel-atual").innerText = nivelAtual + 1;
+            document.getElementById("creditos-pontos").innerText = creditos;
+
+            // Carrega a imagem do enigma
+            const imagemEnigma = document.getElementById("imagem-enigma");
+            imagemEnigma.src = enigma.imagem; // Define a imagem do enigma
+            imagemEnigma.style.display = "block"; // Exibe a imagem
+        }
+
+        function verificarResposta() {
+            const respostaUsuario = document.getElementById("resposta").value.toLowerCase();
+            const resultado = document.getElementById("resultado");
+            const enigma = enigmas[nivelAtual];
+
+            if (respostaUsuario === enigma.resposta) {
+                resultado.innerText = "Parabéns! Você resolveu o enigma!";
+                resultado.style.color = "#00ff00"; // Verde
+                creditos += 2; // Ganho de 2 pontos
+                nivelAtual++;
+                if (nivelAtual < enigmas.length) {
+                    carregarEnigma();
+                } else {
+                    resultado.innerText += " Você completou todos os enigmas!";
+                }
+            } else {
+                resultado.innerText = "Resposta errada. Tente novamente.";
+                resultado.style.color = "#ff0000"; // Vermelho
+            }
+        }
+
+        function pularEnigma() {
+            if (nivelAtual < enigmas.length - 1) {
+                nivelAtual++;
+                carregarEnigma();
+            } else {
+                alert("Você já completou todos os enigmas!");
+            }
+        }
+
+        function pedirDica() {
+            if (creditos > 0) {
+                creditos--;
+                const enigma = enigmas[nivelAtual];
+                const resultado = document.getElementById("resultado");
+                resultado.innerText = `Dica: ${enigma.dica}`;
+                resultado.style.color = "#ffff00"; // Amarelo
+                document.getElementById("creditos-pontos").innerText = creditos;
+            } else {
+                alert("Você não tem mais créditos para dicas.");
+            }
+        }
+
+        function recomeçar() {
+            nivelAtual = 0;
+            creditos = 10;
+            carregarEnigma();
+        }
+
+        // Carrega o primeiro enigma ao iniciar o jogo
+        carregarEnigma();
+    </script>
+</body>
+</html>
